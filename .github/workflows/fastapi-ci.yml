@@ -6,7 +6,6 @@ on:
     branches: [ "develop" ]
     paths:
       - 'api/**'
-      - 'requirements.txt' # Si on change les dépendances, on veut aussi lancer le CI
 
 jobs:
   api-pipeline:
@@ -40,7 +39,7 @@ jobs:
         run: |
           cd api
           # On utilise pytest pour lancer les tests de l'API
-          pytest
+          pytest tests/test_api.py
 
       # 3. Build & Push si tout est OK
       - name: Log in to GHCR

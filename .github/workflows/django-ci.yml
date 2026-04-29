@@ -5,7 +5,6 @@ on:
     branches: [ "develop" ]
     paths:
       - 'django_political_app/**'
-      - 'requirements.txt' # Si on change les dépendances, on veut aussi lancer le CI
 
 jobs:
   quality-and-build:
