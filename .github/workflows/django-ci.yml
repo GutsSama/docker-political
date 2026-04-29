@@ -16,13 +16,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # --- ON CRÉE LE NOM EN MINUSCULES ---
-      - name: Prepare Image Name
-        run: |
-          # On transforme le pseudo en minuscules de façon universelle
-          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_NAME=ghcr.io/$OWNER_LC/predilection-django" >> $GITHUB_ENV
-
       # 2. On installe Python sur la machine de GitHub pour le linter
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -52,5 +45,5 @@ jobs:
           context: ./django_political_app
           push: true
           tags: |
-            ghcr.io/${{ github.IMAGE_NAME }}/predilection-django:latest
-            ghcr.io/${{ github.IMAGE_NAME }}/predilection-django:${{ github.sha }}
+            ghcr.io/gutssama/predilection-django:latest
+            ghcr.io/gutssama/predilection-django:${{ github.sha }}
