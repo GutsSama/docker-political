@@ -1,0 +1,19 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Option A : Tout copier à la racine de /app (Plus simple pour les chemins)
+COPY . .
+
+ENV PYTHONUNBUFFERED=1
+
+# On génère le CSS pendant le build
+RUN python manage.py collectstatic --noinput
+
+# Maintenant manage.py est bien à la racine de /app
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8001"]

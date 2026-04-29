@@ -46,7 +46,13 @@ class PredictionService:
             try:
                 # On force la conversion de l'année en int pour un tri correct
                 year_val = int(r.years) 
-                data.append({"Année": year_val, **r.statistics})
+
+                stats = r.statistics
+
+                if isinstance(stats, str):
+                    stats = json.loads(stats)
+
+                data.append({"Année": year_val, **stats})
             except ValueError:
                 continue # Ignore les années mal formées
         df = pd.DataFrame(data).sort_values(by="Année")

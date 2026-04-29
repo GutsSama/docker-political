@@ -1,0 +1,15 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Installation des dépendances (pense à mettre psycopg2-binary ou libpq-dev)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# On ne copie que le CSV nécessaire (Gain de place)
+COPY data/df_stats.csv ./data/
+# On copie le script
+COPY scripts/ingest.py ./scripts/
+
+
+CMD ["python", "scripts/ingest.py"]

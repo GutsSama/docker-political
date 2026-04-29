@@ -24,12 +24,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+# Une seule ligne suffit pour gérer le cas "normal" et le cas "Docker Build"
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-for-build')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG") == "True"
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0', 'django-container']
 
 
 # Application definition

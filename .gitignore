@@ -215,3 +215,4 @@ src_election/
 
 
 staticfiles/
+.venv*
