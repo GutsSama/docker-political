@@ -33,10 +33,7 @@ services:
       - db_data:/var/lib/postgresql/data
 
   ingest:
-    build:
-      context: .
-      dockerfile: Dockerfile.ingest
-    image: ghcr.io/gutssama/predilection-ingest:1.0.0
+    image: ghcr.io/gutssama/predilection-ingest:latest
     container_name: ingest-container
     depends_on:
       db:
@@ -48,10 +45,7 @@ services:
     # Ce conteneur s'arrêtera tout seul une fois l'ingestion finie
 
   api:
-    build:
-      context: ./api
-      dockerfile: Dockerfile
-    image: ghcr.io/gutssama/predilection-api:1.0.0
+    image: ghcr.io/gutssama/predilection-api:latest
     container_name: fastapi-container
     ports:
       - "8000:8000"
@@ -64,20 +58,23 @@ services:
       - predilection-net
 
   django:
-    build:
-      context: ./django_political_app
-    image: ghcr.io/gutssama/predilection-django:1.0.0
+    image: ghcr.io/gutssama/predilection-django:latest
     container_name: django-container
     volumes:
       - static_volume:/app/staticfiles # Django dépose les fichiers ici
     environment:
       - PYTHONUNBUFFERED=1
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    env_file:
+      - .env
     ports:
       - "8001:8001"
-    env_file:           # 1. Variables globales (DB_USER, etc.)
-      - ./django_political_app/.env # 2. Variables spécifiques Django
     depends_on:
-      - api
+      api:
+        condition: service_started
+      db:
+        condition: service_healthy
     networks:
       - predilection-net
 

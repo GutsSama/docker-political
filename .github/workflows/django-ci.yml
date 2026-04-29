@@ -1,0 +1,49 @@
+name: Django CI - Lint and Build
+
+on:
+  push:
+    branches: [ "develop" ]
+
+jobs:
+  quality-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # 1. On récupère le code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. On installe Python sur la machine de GitHub pour le linter
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 3. On installe et on lance le Linteur (Flake8)
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          # On vérifie les erreurs de syntaxe et le style
+          # exit-zero permet de ne pas bloquer le build si tu as juste des petits soucis de style
+          flake8 ./django_political_app --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      # 4. Connexion au registre GitHub
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 5. Build et Push seulement si tout est OK
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./django_political_app
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/predilection-django:latest
+            ghcr.io/${{ github.repository_owner }}/predilection-django:${{ github.sha }}
