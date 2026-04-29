@@ -51,5 +51,5 @@ jobs:
           context: ./django_political_app
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/predilection-django:latest
-            ghcr.io/${{ github.repository_owner }}/predilection-django:${{ github.sha }}
+            ghcr.io/${{ github.IMAGE_NAME }}/predilection-django:latest
+            ghcr.io/${{ github.IMAGE_NAME }}/predilection-django:${{ github.sha }}
