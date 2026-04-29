@@ -16,6 +16,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # --- ON CRÉE LE NOM EN MINUSCULES ---
+      - name: Prepare Image Name
+        run: |
+          # On prend le pseudo, on le met en minuscules, et on l'enregistre
+          echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/predilection-django" >> ${GITHUB_ENV}
+
       # 2. On installe Python sur la machine de GitHub pour le linter
       - name: Set up Python
         uses: actions/setup-python@v5
