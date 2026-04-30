@@ -53,7 +53,7 @@ services:
       db:
         condition: service_healthy
     env_file:
-      - ./api/.env
+      - .env
     networks:
       - predilection-net
 
