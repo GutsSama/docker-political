@@ -54,6 +54,8 @@ services:
         condition: service_healthy
     env_file:
       - .env
+    volumes:
+      - ./models:/app/saved_models
     networks:
       - predilection-net
 

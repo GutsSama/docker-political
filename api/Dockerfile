@@ -25,12 +25,15 @@ WORKDIR /app
 # On récupère uniquement les libs installées proprement
 COPY --from=builder /install /usr/local
 
-# Sécurité : Créer un utilisateur non-privilégié
+# 1. Créer l'utilisateur et le groupe
 RUN addgroup --system appgroup && adduser --system appuser --ingroup appgroup
 
-# Copie sélective pour éviter de polluer l'image (ignore .git, __pycache__, etc.)
-# Assure-toi d'avoir un fichier .dockerignore
+# 2. Copier le code
 COPY --chown=appuser:appgroup . .
+
+# 3. CRÉER LE DOSSIER DE MODÈLES EXPLICITEMENT
+# On le crée et on s'assure que appuser en est le propriétaire
+RUN mkdir -p /app/saved_models && chown -R appuser:appgroup /app/saved_models
 
 # Passer sur l'utilisateur sécurisé
 USER appuser

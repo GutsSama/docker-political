@@ -38,49 +38,53 @@ class PredictionService:
         city_name = result[0].city if result else "Commune inconnue"
 
         # 2. Aplatissement et TRI (Très important pour la pente)
-        data = []# On récupère le nom de la ville depuis la première ligne du résultat
-        # On récupère le nom de la ville depuis la première ligne du résultat
+        data = []
         city_name = result[0].city if result else "Commune inconnue"
 
         for r in result:
             try:
-                # On force la conversion de l'année en int pour un tri correct
                 year_val = int(r.years) 
-
                 stats = r.statistics
 
                 if isinstance(stats, str):
                     stats = json.loads(stats)
 
+                # IMPORTANT : On ne met pas 'city' ici pour ne pas polluer les calculs
                 data.append({"Année": year_val, **stats})
             except ValueError:
-                continue # Ignore les années mal formées
+                continue 
+        
         df = pd.DataFrame(data).sort_values(by="Année")
 
         # 3. Projection 2027 dynamique
-        # On prend la plus vieille année (v1) et la plus récente (v2)
-        v1_row = df.iloc[0]  # Première ligne (ex: 2011 ou 2012)
-        v2_row = df.iloc[-1] # Dernière ligne (ex: 2022)
+        v1_row = df.iloc[0]  
+        v2_row = df.iloc[-1] 
         
         y1 = v1_row["Année"]
         y2 = v2_row["Année"]
-        delta_t = y2 - y1 # Nombre d'années entre les deux relevés
-        projection_horizon = 2027 - y2 # Nombre d'années à projeter
+        delta_t = y2 - y1 
+        projection_horizon = 2027 - y2 
 
         def project(column_name):
-            if column_name in ["Année", "Résultat"]: return None
-            val1 = float(v1_row[column_name])
-            val2 = float(v2_row[column_name])
-            
-            # Calcul de la pente : (ValeurRécente - ValeurAncienne) / TempsÉcoulé
-            pente_annuelle = (val2 - val1) / delta_t
-            # Projection : ValeurRécente + (Pente * TempsRestant)
-            return max(val2 + (pente_annuelle * projection_horizon), 0)
+            # Sécurité supplémentaire : on vérifie si la valeur est bien numérique
+            try:
+                val1 = float(v1_row[column_name])
+                val2 = float(v2_row[column_name])
+                
+                pente_annuelle = (val2 - val1) / delta_t
+                return max(val2 + (pente_annuelle * projection_horizon), 0)
+            except (ValueError, TypeError):
+                return None # Ou une valeur par défaut si c'est du texte
 
-        # On applique la projection sur toutes les colonnes numériques (sauf Année/Résultat)
-        cols_to_project = [c for c in df.columns if c not in ["Année", "Résultat"]]
+        # Filtrage strict des colonnes à projeter
+        # On exclut "Année", "Résultat", et n'importe quelle colonne de texte résiduelle
+        cols_to_project = [
+            c for c in df.columns 
+            if c not in ["Année", "Résultat", "city"] 
+            and not isinstance(df[c].iloc[0], str) # Sécurité : exclut tout ce qui commence par du texte
+        ]
+        
         projections = pd.Series({c: project(c) for c in cols_to_project})
-
         # 4. Gestion du Zéro et calcul des Pourcentages
         pop_active = projections.get('Population_active', 0)
         pop_enfants = projections.get('Population avec enfants', 0)
