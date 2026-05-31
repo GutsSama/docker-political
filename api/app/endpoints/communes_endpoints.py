@@ -60,7 +60,10 @@ async def get_commune_by_code(
     if code_insee and year:
         stats = CommuneService.get_by_insee(db, code_insee=code_insee, year=year)
     else:
-        return status.HTTP_400_BAD_REQUEST
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le code INSEE et l'année sont requis."
+        )
     return stats
 
 @router.get("/department/{department_code}", status_code=status.HTTP_200_OK, response_model=List[CommuneResponse])
