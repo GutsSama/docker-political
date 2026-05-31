@@ -39,7 +39,6 @@ class PredictionService:
 
         # 2. Aplatissement et TRI (Très important pour la pente)
         data = []
-        city_name = result[0].city if result else "Commune inconnue"
 
         for r in result:
             try:

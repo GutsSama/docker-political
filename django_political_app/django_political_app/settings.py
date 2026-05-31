@@ -24,11 +24,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# Une seule ligne suffit pour gérer le cas "normal" et le cas "Docker Build"
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-for-build')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG") == "True"
+
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-default-key-for-build'
+    else:
+        raise ValueError("La variable d'environnement SECRET_KEY est requise en production !")
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0', 'django-container']
 
@@ -164,7 +169,5 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),  # Si tu utilises un dossier 'static' global
 ]
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

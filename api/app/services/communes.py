@@ -91,7 +91,7 @@ class CommuneService:
             # Mode Tableau : Object complet (Toutes les colonnes + JSON)
             query = select(Communes)
         # Filtres communes
-        query = select(Communes).where(Communes.code_insee.startswith(department_code))
+        query = query.where(Communes.code_insee.startswith(department_code))
         if year:
             query = query.where(Communes.years == year)
 

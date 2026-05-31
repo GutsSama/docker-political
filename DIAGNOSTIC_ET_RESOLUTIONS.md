@@ -1,40 +1,39 @@
 # Diagnostic Technique et Résolutions — Projet Docker Political
 
-Ce document résume le diagnostic technique de l'application, les problèmes identifiés en termes de sécurité et de dette technique, ainsi que les étapes concrètes de résolution implémentées.
+Ce document résume le diagnostic technique de l'application, les problèmes identifiés en termes de sécurité, de dette technique et de duplication, ainsi que les étapes de résolution implémentées.
 
 ---
 
 ## 1. Diagnostic des Problèmes Identifiés
 
-### 🔐 Sécurité & Stabilité (Priorité 1)
-* **Problème de Typage FastAPI (Bug / Sécurité) :** Dans le fichier `api/app/endpoints/communes_endpoints.py`, l'endpoint `/commune` retournait directement un entier (`status.HTTP_400_BAD_REQUEST`) en cas de paramètres manquants au lieu de lever une exception. Cela entraînait un échec systématique de la validation de type Pydantic (qui attendait une liste de communes) et retournait des erreurs 500 opaques à l'utilisateur.
-* **Exposition de Secrets :** Vérification nécessaire pour garantir qu'aucune clé privée ou URL de base de données sensible n'était écrite en dur dans le code, et que les fichiers `.env` étaient correctement ignorés.
+### 🔐 Sécurité & Stabilité
+1. **Problème de Typage FastAPI (Bug / Sécurité) :** Dans `api/app/endpoints/communes_endpoints.py`, l'endpoint `/commune` retournait directement un entier (`status.HTTP_400_BAD_REQUEST`) en cas de paramètres manquants au lieu de lever une exception, provoquant un plantage Pydantic (erreur 500) à la place d'une réponse propre.
+2. **Absence de CORS dans FastAPI (Sécurité) :** Bien qu'une liste d'origines de confiance soit présente, le middleware `CORSMiddleware` n'était pas configuré sur l'instance FastAPI, bloquant ou ouvrant à tort les requêtes cross-origin.
+3. **Clé Secrète de Secours Infiltrée (Sécurité) :** Django disposait d'une clé secrète de secours codée en dur (`django-insecure-default-key-for-build`) utilisable silencieusement si la variable d'environnement venait à manquer en production.
 
-### 🏗️ Dette Technique & Doublons (Priorité 2)
-* **Duplication Structurelle :** Dans le fichier `api/app/routers/api.py`, le routeur `prediction_router` était importé et inclus **deux fois** consécutives. Cette redondance polluait l'arborescence des routes de l'API et augmentait inutilement la surface d'exposition de l'application.
+### 🏗️ Dette Technique & Bugs fonctionnels
+1. **Mode `light` Cassé dans `CommuneService` :** Dans `api/app/services/communes.py`, la requête optimisée en mode léger (`light=True`) de `get_by_department` était intégralement écrasée quelques lignes plus bas par une sélection générique (`select(Communes)`), consommant inutilement du réseau et de la mémoire.
+2. **Duplication de route dans l'API :** Dans `api/app/routers/api.py`, le routeur `prediction_router` était importé et inclus deux fois.
 
-### 🧪 Couverture de Tests (Priorité 3)
-* **Manque de Tests Réels :** Le fichier `api/tests/test_api.py` contenait uniquement des définitions de fixtures Pytest, mais aucun scénario de test concret. Les endpoints critiques n'étaient donc pas du tout testés de manière automatisée.
+### 👥 Duplications de code
+1. **Assignation redondante dans `predict.py` :** L'instruction `city_name = result[0].city if result else "Commune inconnue"` était répétée consécutivement aux lignes 38 et 42.
+2. **Double déclaration dans `settings.py` :** La variable `STATIC_ROOT` était définie à deux reprises à la fin de la configuration Django.
 
 ---
 
-## 2. Étapes de Résolution Étape par Étape
+## 2. Étapes de Résolution
 
-Les corrections ont été réparties sur trois branches Git dédiées pour une intégration propre :
+Toutes les résolutions ont été appliquées pour assainir durablement l'architecture :
 
-### 🎯 Étape 1 : Branche `security-fixes-p1`
-* **Sécurisation de la validation FastAPI :** Modification de `api/app/endpoints/communes_endpoints.py` pour lever une exception structurée `HTTPException` en cas de requête invalide :
-  ```python
-  raise HTTPException(
-      status_code=status.HTTP_400_BAD_REQUEST,
-      detail="Le code INSEE et l'année sont requis."
-  )
-  ```
-* **Validation de la configuration :** Confirmation du bon comportement de `.gitignore` concernant les fichiers `.env` et de la présence de valeurs factices uniquement dans `.env_exemple`.
+### 🎯 Phase 1 : Sécurité
+* **Exceptions explicites :** Ajout de la levée d'exceptions FastAPI propre dans les endpoints.
+* **CORS activé :** Enregistrement de `CORSMiddleware` avec les origines de confiance définies.
+* **Clé secrète renforcée :** Conditionnement de la clé par défaut uniquement lorsque `DEBUG = True`, sinon levée d'erreur.
 
-### 🎯 Étape 2 : Branche `refactoring-structure-p2`
-* **Nettoyage des routes doublonnées :** Correction de `api/app/routers/api.py` pour supprimer la double importation et la double inclusion de `prediction_router`, garantissant une seule et unique route de vérité pour chaque endpoint de l'API.
+### 🎯 Phase 2 : Structure & Performance
+* **Nettoyage des routeurs :** Retrait des inclusions doublées de `prediction_router`.
+* **Correction du mode léger (`light`) :** Restauration de la sélection de colonnes restreinte dans `get_by_department`.
+* **Retrait des duplications :** Nettoyage des affectations en double de `city_name` et de `STATIC_ROOT`.
 
-### 🎯 Étape 3 : Branche `testing-improvements-p3`
-* **Implémentation des tests unitaires :** Complétion de `api/tests/test_api.py` avec de vrais tests exploitant le `TestClient` de FastAPI et des mocks via `unittest.mock.patch` pour simuler et valider le comportement de la base de données.
-* **Création d'un Smoke Test global :** Ajout de `api/tests/test_health.py` pour valider l'intégrité minimale et le démarrage sans erreur de l'API FastAPI à la racine.
+### 🎯 Phase 3 : Tests
+* **Tests unitaires et de fumée :** Intégration de tests robustes validant les scénarios de réussite et d'échec de l'API.
