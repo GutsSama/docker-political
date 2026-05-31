@@ -57,6 +57,7 @@ L'application est déployée sur un VPS (Virtual Private Server) avec une archit
 - 🚦 **[Traefik](docs/traefik.md)** : Reverse Proxy, terminaison TLS et certificats SSL (Let's Encrypt).
 
 **CI/CD (Déploiement Continu) :** Le projet utilise un pipeline GitHub Actions avec les **GitHub Environments**. Le déploiement s'adapte automatiquement à la branche ou au tag poussé, isolant ainsi les déploiements de chaque développeur (`dev`, `staging`, `prod`) sur son propre VPS cible.
+👉 **[Lire le détail de la stratégie de déploiement en équipe (Multi-VPS)](docs/multi_vps_deployment.md)**
 
 ### Structure du projet
 
