@@ -75,6 +75,16 @@ jobs:
             ghcr.io/john-do59/predilection-api:${{ steps.version.outputs.tag }}
             ghcr.io/john-do59/predilection-api:latest
 
+      - name: Build & Push — Image Ingest
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.ingest
+          push: true
+          tags: |
+            ghcr.io/john-do59/predilection-ingest:${{ steps.version.outputs.tag }}
+            ghcr.io/john-do59/predilection-ingest:latest
+
       - name: Build & Push — Image Django
         uses: docker/build-push-action@v6
         with:
