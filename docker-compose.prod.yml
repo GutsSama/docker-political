@@ -152,4 +152,5 @@ volumes:
 
 networks:
   predilection-net:
+    name: predilection-net
     driver: bridge
