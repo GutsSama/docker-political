@@ -15,8 +15,7 @@ echo " Répertoire de déploiement : ${DEPLOY_DIR}"
 # 1. Se placer dans le dossier du projet
 cd "${DEPLOY_DIR}"
 
-# 2. Récupérer la dernière version du code (si git est utilisé pour config)
-git pull --rebase
+# Les fichiers docker-compose.prod.yml et deploy.sh sont envoyés via SCP par GitHub Actions
 
 # 3. Exporter le tag de l'image pour que docker-compose le prenne en compte
 export RELEASE_TAG="${IMAGE_TAG}"

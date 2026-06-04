@@ -110,6 +110,16 @@ jobs:
             echo "tag=${BRANCH_NAME}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Transférer les fichiers de configuration sur le VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 1455
+          source: "docker-compose.prod.yml,scripts/deploy.sh"
+          target: "/home/${{ secrets.VPS_USER }}/docker-political"
+
       - name: Déploiement SSH sur le VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
