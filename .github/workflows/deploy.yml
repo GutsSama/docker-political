@@ -120,17 +120,27 @@ jobs:
           source: "docker-compose.prod.yml,scripts/deploy.sh"
           target: "/home/${{ secrets.VPS_USER }}/docker-political"
 
-      - name: Déploiement SSH sur le VPS
+      - name: Déploiement SSH sur le VPS (secrets injectés en mémoire)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 1455
+          envs: RELEASE_TAG,DATABASE_URL,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,SECRET_KEY,DEBUG,DOMAIN_NAME,TRAEFIK_DASHBOARD_CREDENTIALS
           script: |
             cd /home/${{ secrets.VPS_USER }}/docker-political
-            export RELEASE_TAG="${{ steps.version.outputs.tag }}"
             bash scripts/deploy.sh "$RELEASE_TAG"
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DEBUG: ${{ secrets.DEBUG }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          TRAEFIK_DASHBOARD_CREDENTIALS: ${{ secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}
 
       - name: Vérification post-déploiement (smoke test HTTP)
         run: |
