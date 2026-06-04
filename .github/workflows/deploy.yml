@@ -127,7 +127,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 1455
-          envs: RELEASE_TAG,DATABASE_URL,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,SECRET_KEY,DEBUG,DOMAIN_NAME,TRAEFIK_DASHBOARD_CREDENTIALS
+          envs: RELEASE_TAG,DATABASE_URL,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,SECRET_KEY,DEBUG,DOMAIN_NAME,TRAEFIK_DASHBOARD_CREDENTIALS,GITHUB_TOKEN
           script: |
             cd /home/${{ secrets.VPS_USER }}/docker-political
             bash scripts/deploy.sh "$RELEASE_TAG"
@@ -141,6 +141,7 @@ jobs:
           DEBUG: ${{ secrets.DEBUG }}
           DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
           TRAEFIK_DASHBOARD_CREDENTIALS: ${{ secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Vérification post-déploiement (smoke test HTTP)
         run: |
