@@ -4,7 +4,7 @@
 # Usage : docker compose -f docker-compose.prod.yml up -d
 #
 # Prérequis :
-#   - Fichier .env renseigné (voir .env-exemple.txt)
+#   - Variables d'environnement injectées par GitHub Actions (aucun .env sur le VPS)
 #   - Variable RELEASE_TAG exportée (ex: export RELEASE_TAG=v1.0.0)
 #   - Certificat ACME géré par Traefik (dossier letsencrypt/)
 #   - Générer le hash BasicAuth :
@@ -85,8 +85,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ./models:/app/saved_models
     networks:
@@ -109,11 +112,16 @@ services:
     volumes:
       - static_volume:/app/staticfiles
     environment:
-      - PYTHONUNBUFFERED=1
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-    env_file:
-      - .env
+      PYTHONUNBUFFERED: "1"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG}
+      BASE_URL_LOCAL: http://fastapi-container:8000
+      BASE_URL: https://geo.api.gouv.fr
     depends_on:
       api:
         condition: service_started
