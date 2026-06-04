@@ -32,6 +32,10 @@ RUN mkdir -p /app/staticfiles && chown -R appuser:appgroup /app/staticfiles
 USER appuser
 
 # Génération des fichiers statiques
+ARG SECRET_KEY=django-insecure-build-only-not-for-production
+ARG DEBUG=True
+ENV SECRET_KEY=$SECRET_KEY
+ENV DEBUG=$DEBUG
 RUN python manage.py collectstatic --noinput
 
 # Utilisation de Gunicorn au lieu de runserver
