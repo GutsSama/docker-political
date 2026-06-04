@@ -65,7 +65,7 @@ services:
   
   # INGEST — Importation des données (s'arrête automatiquement)
   ingest:
-    image: ghcr.io/gutssama/predilection-ingest:${RELEASE_TAG:-latest}
+    image: ghcr.io/john-do59/predilection-ingest:${RELEASE_TAG:-latest}
     container_name: ingest-container
     restart: no
     depends_on:
@@ -79,7 +79,7 @@ services:
   
   # FASTAPI — Backend ML/données, exposé uniquement via Traefik
   api:
-    image: ghcr.io/gutssama/predilection-api:${RELEASE_TAG:-latest}
+    image: ghcr.io/john-do59/predilection-api:${RELEASE_TAG:-latest}
     container_name: fastapi-container
     restart: unless-stopped
     depends_on:
@@ -103,7 +103,7 @@ services:
   # DJANGO — Application web, exposée uniquement via Traefik
   
   django:
-    image: ghcr.io/gutssama/predilection-django:${RELEASE_TAG:-latest}
+    image: ghcr.io/john-do59/predilection-django:${RELEASE_TAG:-latest}
     container_name: django-container
     restart: unless-stopped
     volumes:

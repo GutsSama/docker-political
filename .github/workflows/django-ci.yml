@@ -47,5 +47,5 @@ jobs:
           context: ./django_political_app
           push: true
           tags: |
-            ghcr.io/gutssama/predilection-django:latest
-            ghcr.io/gutssama/predilection-django:${{ github.sha }}
+            ghcr.io/john-do59/predilection-django:latest
+            ghcr.io/john-do59/predilection-django:${{ github.sha }}

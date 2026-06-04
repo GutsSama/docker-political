@@ -55,5 +55,5 @@ jobs:
           context: ./api
           push: true
           tags: |
-            ghcr.io/gutssama/predilection-api:latest
-            ghcr.io/gutssama/predilection-api:${{ github.sha }}
+            ghcr.io/john-do59/predilection-api:latest
+            ghcr.io/john-do59/predilection-api:${{ github.sha }}

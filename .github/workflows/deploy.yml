@@ -72,8 +72,8 @@ jobs:
           context: ./api
           push: true
           tags: |
-            ghcr.io/gutssama/predilection-api:${{ steps.version.outputs.tag }}
-            ghcr.io/gutssama/predilection-api:latest
+            ghcr.io/john-do59/predilection-api:${{ steps.version.outputs.tag }}
+            ghcr.io/john-do59/predilection-api:latest
 
       - name: Build & Push — Image Django
         uses: docker/build-push-action@v6
@@ -81,8 +81,8 @@ jobs:
           context: ./django_political_app
           push: true
           tags: |
-            ghcr.io/gutssama/predilection-django:${{ steps.version.outputs.tag }}
-            ghcr.io/gutssama/predilection-django:latest
+            ghcr.io/john-do59/predilection-django:${{ steps.version.outputs.tag }}
+            ghcr.io/john-do59/predilection-django:latest
 
   # JOB 3 : Déploiement SSH sur le VPS (Environnements Isolés)
 

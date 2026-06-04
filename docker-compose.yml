@@ -33,7 +33,7 @@ services:
       - db_data:/var/lib/postgresql/data
 
   ingest:
-    image: ghcr.io/gutssama/predilection-ingest:latest
+    image: ghcr.io/john-do59/predilection-ingest:latest
     container_name: ingest-container
     depends_on:
       db:
@@ -45,7 +45,7 @@ services:
     # Ce conteneur s'arrêtera tout seul une fois l'ingestion finie
 
   api:
-    image: ghcr.io/gutssama/predilection-api:latest
+    image: ghcr.io/john-do59/predilection-api:latest
     container_name: fastapi-container
     ports:
       - "8000:8000"
@@ -60,7 +60,7 @@ services:
       - predilection-net
 
   django:
-    image: ghcr.io/gutssama/predilection-django:latest
+    image: ghcr.io/john-do59/predilection-django:latest
     container_name: django-container
     volumes:
       - static_volume:/app/staticfiles # Django dépose les fichiers ici
