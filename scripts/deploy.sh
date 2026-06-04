@@ -31,6 +31,18 @@ echo "${GITHUB_TOKEN:-}" | docker login ghcr.io -u john-do59 --password-stdin 2>
 echo "📦 Pull des images depuis GHCR..."
 docker compose -f "${COMPOSE_FILE}" pull
 
+# 4b. Réinitialiser acme.json si nécessaire pour forcer la regénération du certificat SSL
+# Traefik ne peut pas renouveler un cert si acme.json contient une entrée corrompue ou vide.
+ACME_JSON=$(docker volume inspect letsencrypt_data --format '{{ .Mountpoint }}' 2>/dev/null)/acme.json
+if [ -f "${ACME_JSON}" ] && [ ! -s "${ACME_JSON}" ]; then
+    echo "🗑️  acme.json vide détecté — suppression pour forcer la regénération du certificat SSL"
+    rm -f "${ACME_JSON}"
+elif [ ! -f "${ACME_JSON}" ]; then
+    echo "ℹ️  acme.json absent — Traefik le créera au démarrage"
+else
+    echo "✅ acme.json présent ($(wc -c < "${ACME_JSON}") octets)"
+fi
+
 # 5. Redémarrer les services (recréation uniquement si l'image a changé)
 echo "🔄 Redémarrage des services..."
 docker compose -f "${COMPOSE_FILE}" up -d --remove-orphans
