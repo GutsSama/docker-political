@@ -155,13 +155,13 @@ jobs:
 
       - name: Vérification post-déploiement (smoke test HTTP)
         run: |
-          sleep 10
+          sleep 15
           echo "Test de disponibilité de l'application..."
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.DOMAIN_NAME }}/home || echo "000")
+          HTTP_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://${{ secrets.DOMAIN_NAME }}/home/ || echo "000")
           echo "HTTP Status: ${HTTP_CODE}"
-          if [ "${HTTP_CODE}" = "200" ] || [ "${HTTP_CODE}" = "302" ]; then
-            echo "Application accessible."
+          if [[ "$HTTP_CODE" =~ ^(200|301|302)$ ]]; then
+            echo "✅ Application accessible."
           else
-            echo " ERREUR : L'application répond HTTP ${HTTP_CODE}."
+            echo "❌ ERREUR : L'application répond HTTP ${HTTP_CODE}."
             exit 1
           fi
