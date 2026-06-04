@@ -120,6 +120,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG}
+      DOMAIN_NAME: ${DOMAIN_NAME}
       BASE_URL_LOCAL: http://fastapi-container:8000
       BASE_URL: https://geo.api.gouv.fr
     depends_on:

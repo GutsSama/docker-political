@@ -35,7 +35,8 @@ if not SECRET_KEY:
     else:
         raise ValueError("La variable d'environnement SECRET_KEY est requise en production !")
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0', 'django-container']
+domain_name = os.getenv("DOMAIN_NAME", "localhost")
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0', 'django-container', domain_name]
 
 
 # Application definition
