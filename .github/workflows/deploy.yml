@@ -127,8 +127,9 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 1455
-          source: "docker-compose.prod.yml,scripts/deploy.sh"
+          source: "docker-compose.prod.yml,scripts/deploy.sh,traefik/traefik.yml"
           target: "/home/${{ secrets.VPS_USER }}/docker-political"
+          strip_components: 0
 
       - name: Déploiement SSH sur le VPS (secrets injectés en mémoire)
         uses: appleboy/ssh-action@v1.2.0

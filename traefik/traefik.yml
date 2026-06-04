@@ -7,7 +7,7 @@ entryPoints:
     # Redirection automatique HTTP → HTTPS
     http:
       redirections:
-        entrypoint:
+        entryPoint:
           to: websecure
           scheme: https
   websecure:
@@ -24,7 +24,7 @@ certificatesResolvers:
   letsencrypt:
     acme:
       # Remplacer par votre adresse email réelle
-      email: "admin@example.com"
+      email: "admin@docker-political.duckdns.org"
       storage: "/letsencrypt/acme.json"
       httpChallenge:
         entryPoint: web
