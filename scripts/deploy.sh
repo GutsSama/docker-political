@@ -19,10 +19,9 @@ echo "  Répertoire de déploiement : ${DEPLOY_DIR}"
 # 1. Se placer dans le dossier du projet
 cd "${DEPLOY_DIR}"
 
-# 2. Exporter le tag de l'image pour que docker compose le prenne en compte
-#    Les autres variables (DATABASE_URL, SECRET_KEY, etc.) sont déjà présentes
-#    dans l'environnement du shell SSH, injectées par GitHub Actions.
+# 2. Exporter le tag de l'image et nettoyer DOMAIN_NAME (enlever http://, https://, ou les slash)
 export RELEASE_TAG="${IMAGE_TAG}"
+export DOMAIN_NAME=$(echo "${DOMAIN_NAME:-localhost}" | sed -E 's|^https?://||' | sed -E 's|/.*$||')
 
 # 3. Connexion au registre GHCR pour pouvoir pull les images privées
 echo "🔐 Connexion à GHCR..."
