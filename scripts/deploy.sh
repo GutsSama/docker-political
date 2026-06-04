@@ -10,7 +10,7 @@
 set -euo pipefail
 
 IMAGE_TAG="${1:-latest}"
-DEPLOY_DIR="/home/amaury/docker-political"
+DEPLOY_DIR="/home/${USER:-amaury}/docker-political"
 COMPOSE_FILE="docker-compose.prod.yml"
 
 echo "▶ [deploy.sh] Déploiement de la version : ${IMAGE_TAG}"
@@ -48,5 +48,5 @@ if [ "${HTTP_CODE}" = "200" ] || [ "${HTTP_CODE}" = "302" ]; then
     echo "✅ Application accessible (HTTP ${HTTP_CODE})."
 else
     echo "⚠️  Attention : l'application renvoie HTTP ${HTTP_CODE}. Vérifiez les logs :"
-    echo "   docker compose -f ${COMPOSE_FILE} logs --tail=50"
+    docker compose -f "${COMPOSE_FILE}" logs --tail=100 traefik django
 fi
