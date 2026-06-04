@@ -1,4 +1,4 @@
-# =============================================================================
+
 # docker-compose.prod.yml — Configuration de production
 #
 # Usage : docker compose -f docker-compose.prod.yml up -d
@@ -10,13 +10,11 @@
 #   - Générer le hash BasicAuth :
 #       htpasswd -nb admin <mot_de_passe> | sed -e s/\\$/\\$\\$/g
 #     Puis remplacer la valeur de traefik.http.middlewares.dashboard-auth.basicauth.users
-# =============================================================================
+
 
 services:
 
-  # ---------------------------------------------------------------------------
   # TRAEFIK — Reverse proxy, TLS automatique, protection dashboard
-  # ---------------------------------------------------------------------------
   traefik:
     image: traefik:v3.3
     container_name: traefik-proxy
@@ -26,7 +24,7 @@ services:
       - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./nginx/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - letsencrypt_data:/letsencrypt
       - traefik_logs:/logs
     networks:
@@ -43,9 +41,8 @@ services:
       # Remplacer par le hash généré avec htpasswd :
       - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
 
-  # ---------------------------------------------------------------------------
+  
   # DATABASE — PostgreSQL avec volume persistant
-  # ---------------------------------------------------------------------------
   db:
     image: postgres:17-alpine3.23
     container_name: prediclection-db-container
@@ -65,9 +62,8 @@ services:
       - db_data:/var/lib/postgresql/data
     # Aucun port exposé à l'extérieur — uniquement accessible via le réseau Docker interne
 
-  # ---------------------------------------------------------------------------
+  
   # INGEST — Importation des données (s'arrête automatiquement)
-  # ---------------------------------------------------------------------------
   ingest:
     image: ghcr.io/gutssama/predilection-ingest:${RELEASE_TAG:-latest}
     container_name: ingest-container
@@ -80,9 +76,8 @@ services:
     networks:
       - predilection-net
 
-  # ---------------------------------------------------------------------------
+  
   # FASTAPI — Backend ML/données, exposé uniquement via Traefik
-  # ---------------------------------------------------------------------------
   api:
     image: ghcr.io/gutssama/predilection-api:${RELEASE_TAG:-latest}
     container_name: fastapi-container
@@ -104,9 +99,9 @@ services:
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
       - "traefik.http.services.api.loadbalancer.server.port=8000"
 
-  # ---------------------------------------------------------------------------
+  
   # DJANGO — Application web, exposée uniquement via Traefik
-  # ---------------------------------------------------------------------------
+  
   django:
     image: ghcr.io/gutssama/predilection-django:${RELEASE_TAG:-latest}
     container_name: django-container
