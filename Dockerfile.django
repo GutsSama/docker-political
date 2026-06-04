@@ -10,6 +10,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Option A : Tout copier à la racine de /app (Plus simple pour les chemins)
 COPY django_political_app/ .
 
+# Clé factice uniquement pour le build (collectstatic).
+# Elle est écrasée par les vraies valeurs injectées au runtime par Docker Compose.
+ARG SECRET_KEY=django-insecure-build-only-not-for-production
+ARG DEBUG=True
+ENV SECRET_KEY=$SECRET_KEY
+ENV DEBUG=$DEBUG
+
 # On génère le CSS pendant le build
 RUN python manage.py collectstatic --noinput
 
