@@ -49,6 +49,16 @@ Predil'ection est une **Application web** conçue pour prédire les résultats d
 - **Tests :** Pytest avec couverture de code
 - **Documentation :** Swagger UI et ReDoc et commentaires détaillés dans le code
 
+### Infrastructure & Déploiement (Production)
+L'application est déployée sur un VPS (Virtual Private Server) avec une architecture sécurisée et isolée :
+- 🔒 **[Pare-feu (UFW)](docs/firewall.md)** : Ports d'accès restreints.
+- 🛡️ **[Fail2Ban](docs/fail2ban.md)** : Protection contre le bruteforce SSH via journal systemd.
+- 🐳 **[Docker](docs/docker.md)** : Isolation complète des services dans un réseau interne.
+- 🚦 **[Traefik](docs/traefik.md)** : Reverse Proxy, terminaison TLS et certificats SSL (Let's Encrypt).
+
+**CI/CD (Déploiement Continu) :** Le projet utilise un pipeline GitHub Actions avec les **GitHub Environments**. Le déploiement s'adapte automatiquement à la branche ou au tag poussé, isolant ainsi les déploiements de chaque développeur (`dev`, `staging`, `prod`) sur son propre VPS cible.
+👉 **[Lire le détail de la stratégie de déploiement en équipe (Multi-VPS)](docs/multi_vps_deployment.md)**
+
 ### Structure du projet
 
 ```

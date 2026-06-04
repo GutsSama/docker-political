@@ -1,0 +1,144 @@
+
+# docker-compose.prod.yml — Configuration de production
+#
+# Usage : docker compose -f docker-compose.prod.yml up -d
+#
+# Prérequis :
+#   - Fichier .env renseigné (voir .env-exemple.txt)
+#   - Variable RELEASE_TAG exportée (ex: export RELEASE_TAG=v1.0.0)
+#   - Certificat ACME géré par Traefik (dossier letsencrypt/)
+#   - Générer le hash BasicAuth :
+#       htpasswd -nb admin <mot_de_passe> | sed -e s/\\$/\\$\\$/g
+#     Puis remplacer la valeur de traefik.http.middlewares.dashboard-auth.basicauth.users
+
+
+services:
+
+  # TRAEFIK — Reverse proxy, TLS automatique, protection dashboard
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - letsencrypt_data:/letsencrypt
+      - traefik_logs:/logs
+    networks:
+      - predilection-net
+    labels:
+      - "traefik.enable=true"
+      # -- Routeur dashboard --
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN_NAME}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      # -- Middleware BasicAuth pour dashboard --
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      # Remplacer par le hash généré avec htpasswd :
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
+
+  
+  # DATABASE — PostgreSQL avec volume persistant
+  db:
+    image: postgres:17-alpine3.23
+    container_name: prediclection-db-container
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+    networks:
+      - predilection-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    # Aucun port exposé à l'extérieur — uniquement accessible via le réseau Docker interne
+
+  
+  # INGEST — Importation des données (s'arrête automatiquement)
+  ingest:
+    image: ghcr.io/john-do59/predilection-ingest:${RELEASE_TAG:-latest}
+    container_name: ingest-container
+    restart: no
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    networks:
+      - predilection-net
+
+  
+  # FASTAPI — Backend ML/données, exposé uniquement via Traefik
+  api:
+    image: ghcr.io/john-do59/predilection-api:${RELEASE_TAG:-latest}
+    container_name: fastapi-container
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - ./models:/app/saved_models
+    networks:
+      - predilection-net
+    # Aucun port exposé directement sur le host → passage par Traefik uniquement
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.api.loadbalancer.server.port=8000"
+
+  
+  # DJANGO — Application web, exposée uniquement via Traefik
+  
+  django:
+    image: ghcr.io/john-do59/predilection-django:${RELEASE_TAG:-latest}
+    container_name: django-container
+    restart: unless-stopped
+    volumes:
+      - static_volume:/app/staticfiles
+    environment:
+      - PYTHONUNBUFFERED=1
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    env_file:
+      - .env
+    depends_on:
+      api:
+        condition: service_started
+      db:
+        condition: service_healthy
+    networks:
+      - predilection-net
+    # Aucun port exposé directement sur le host → passage par Traefik uniquement
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.django.rule=Host(`${DOMAIN_NAME}`)"
+      - "traefik.http.routers.django.entrypoints=websecure"
+      - "traefik.http.routers.django.tls.certresolver=letsencrypt"
+      - "traefik.http.services.django.loadbalancer.server.port=8001"
+      # Servir les fichiers statiques via le même routeur sur /static/
+      - "traefik.http.routers.static.rule=Host(`${DOMAIN_NAME}`) && PathPrefix(`/static/`)"
+      - "traefik.http.routers.static.entrypoints=websecure"
+      - "traefik.http.routers.static.tls.certresolver=letsencrypt"
+
+volumes:
+  static_volume:
+  db_data:
+  letsencrypt_data:
+  traefik_logs:
+
+networks:
+  predilection-net:
+    driver: bridge

@@ -1,0 +1,42 @@
+# traefik.yml — Configuration statique de Traefik
+
+# Points d'entrée HTTP/HTTPS
+entryPoints:
+  web:
+    address: ":80"
+    # Redirection automatique HTTP → HTTPS
+    http:
+      redirections:
+        entrypoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+
+# Providers (Docker)
+providers:
+  docker:
+    exposedByDefault: false # Seuls les conteneurs avec traefik.enable=true sont exposés
+    network: predilection-net
+
+# Certificats TLS via Let's Encrypt (ACME)
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      # Remplacer par votre adresse email réelle
+      email: "admin@example.com"
+      storage: "/letsencrypt/acme.json"
+      httpChallenge:
+        entryPoint: web
+
+# Dashboard Traefik
+api:
+  dashboard: true
+  insecure: false # Dashboard accessible uniquement via HTTPS + BasicAuth
+
+# Logs
+log:
+  level: "INFO"
+
+accessLog:
+  filePath: "/logs/traefik-access.log"
