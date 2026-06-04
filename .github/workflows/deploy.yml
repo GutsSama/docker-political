@@ -165,3 +165,14 @@ jobs:
             echo "❌ ERREUR : L'application répond HTTP ${HTTP_CODE}."
             exit 1
           fi
+
+      - name: Afficher les logs en cas d'erreur
+        if: failure()
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /home/${{ secrets.VPS_USER }}/docker-political
+            docker compose -f docker-compose.prod.yml logs --tail=100 traefik django api
