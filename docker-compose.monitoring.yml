@@ -33,9 +33,30 @@ services:
     networks:
       - predilection-net
 
+  grafana:
+    image: grafana/grafana:11.1.0 # Utilisation d'une version stable
+    container_name: monitoring-grafana
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${POSTGRES_PASSWORD:-admin} # Mot de passe par défaut
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - predilection-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      # Réutilisation du middleware BasicAuth de Traefik (défini dans docker-compose.prod.yml)
+      - "traefik.http.routers.grafana.middlewares=auth@file"
+
 networks:
   predilection-net:
     external: true
 
 volumes:
   prometheus_data:
+  grafana_data:
