@@ -25,33 +25,35 @@ export RELEASE_TAG="${IMAGE_TAG}"
 export DOMAIN_NAME=$(echo "${DOMAIN_NAME:-localhost}" | sed -E 's|^https?://||' | sed -E 's|/.*$||')
 
 # 3. Connexion au registre GHCR pour pouvoir pull les images privées
-echo "🔐 Connexion à GHCR..."
+echo " Connexion à GHCR..."
 echo "${GITHUB_TOKEN:-}" | docker login ghcr.io -u john-do59 --password-stdin 2>/dev/null || true
 
 # 4. Récupérer les nouvelles images depuis GHCR
 echo "📦 Pull des images depuis GHCR..."
-docker compose -f "${COMPOSE_FILE}" pull
-docker compose -f "${MONITORING_FILE}" pull || echo "⚠️  Fichier de monitoring non trouvé ou erreur pull"
+if [ -f "${MONITORING_FILE}" ]; then
+  COMPOSE_ARGS="-f ${COMPOSE_FILE} -f ${MONITORING_FILE}"
+else
+  COMPOSE_ARGS="-f ${COMPOSE_FILE}"
+fi
 
-# (acme.json reset logic removed)
+docker compose ${COMPOSE_ARGS} pull
 
 # 5. Redémarrer les services (recréation uniquement si l'image a changé)
 echo "🔄 Redémarrage des services..."
-docker compose -f "${COMPOSE_FILE}" up -d --remove-orphans
-docker compose -f "${MONITORING_FILE}" up -d --remove-orphans || echo "⚠️  Fichier de monitoring non trouvé ou erreur démarrage"
+docker compose ${COMPOSE_ARGS} up -d --remove-orphans
 
 # 6. Supprimer les images inutilisées pour libérer de l'espace
 docker image prune -f
 
-echo "✅ Déploiement terminé avec succès."
+echo " Déploiement terminé avec succès."
 
 # 7. Vérification rapide : health check HTTP sur l'app Django
-echo "🩺 Vérification santé de l'application..."
+echo "Vérification santé de l'application..."
 sleep 5
 HTTP_CODE=$(curl -s -H "Host: ${DOMAIN_NAME}" -o /dev/null -w "%{http_code}" http://localhost/home || echo "000")
 if [ "${HTTP_CODE}" = "200" ] || [ "${HTTP_CODE}" = "302" ]; then
-    echo "✅ Application accessible (HTTP ${HTTP_CODE})."
+    echo "Application accessible (HTTP ${HTTP_CODE})."
 else
-    echo "⚠️  Attention : l'application renvoie HTTP ${HTTP_CODE}. Vérifiez les logs :"
+    echo "Attention : l'application renvoie HTTP ${HTTP_CODE}. Vérifiez les logs :"
     docker compose -f "${COMPOSE_FILE}" logs --tail=100 traefik django
 fi
