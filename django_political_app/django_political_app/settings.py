@@ -38,6 +38,9 @@ if not SECRET_KEY:
 domain_name = os.getenv("DOMAIN_NAME", "localhost")
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0', 'django-container', domain_name]
 
+# Configurations requises pour le Reverse Proxy (Traefik) + HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_TRUSTED_ORIGINS = [f"https://{domain_name}"]
 
 # Application definition
 
