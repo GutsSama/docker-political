@@ -53,6 +53,19 @@ services:
       # Réutilisation du middleware BasicAuth de Traefik (défini dans docker-compose.prod.yml)
       - "traefik.http.routers.grafana.middlewares=auth@file"
 
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: monitoring-cadvisor
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - predilection-net
+
 networks:
   predilection-net:
     external: true
