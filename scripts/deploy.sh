@@ -12,6 +12,7 @@ set -euo pipefail
 IMAGE_TAG="${1:-latest}"
 DEPLOY_DIR="/home/${USER:-amaury}/docker-political"
 COMPOSE_FILE="docker-compose.prod.yml"
+MONITORING_FILE="docker-compose.monitoring.yml"
 
 echo "▶ [deploy.sh] Déploiement de la version : ${IMAGE_TAG}"
 echo "  Répertoire de déploiement : ${DEPLOY_DIR}"
@@ -30,12 +31,14 @@ echo "${GITHUB_TOKEN:-}" | docker login ghcr.io -u john-do59 --password-stdin 2>
 # 4. Récupérer les nouvelles images depuis GHCR
 echo "📦 Pull des images depuis GHCR..."
 docker compose -f "${COMPOSE_FILE}" pull
+docker compose -f "${MONITORING_FILE}" pull || echo "⚠️  Fichier de monitoring non trouvé ou erreur pull"
 
 # (acme.json reset logic removed)
 
 # 5. Redémarrer les services (recréation uniquement si l'image a changé)
 echo "🔄 Redémarrage des services..."
 docker compose -f "${COMPOSE_FILE}" up -d --remove-orphans
+docker compose -f "${MONITORING_FILE}" up -d --remove-orphans || echo "⚠️  Fichier de monitoring non trouvé ou erreur démarrage"
 
 # 6. Supprimer les images inutilisées pour libérer de l'espace
 docker image prune -f
