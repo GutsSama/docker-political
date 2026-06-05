@@ -66,33 +66,78 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & Push — Image FastAPI
+      - name: Build — Image FastAPI (Local Load)
         uses: docker/build-push-action@v6
         with:
           context: ./api
-          push: true
+          load: true
           tags: |
             ghcr.io/john-do59/predilection-api:${{ steps.version.outputs.tag }}
             ghcr.io/john-do59/predilection-api:latest
 
-      - name: Build & Push — Image Ingest
+      - name: Scan Image FastAPI avec Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ghcr.io/john-do59/predilection-api:${{ steps.version.outputs.tag }}'
+          format: 'table'
+          exit-code: '1' # Bloque le pipeline en cas de criticité
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'
+
+      - name: Push — Image FastAPI
+        run: |
+          docker push ghcr.io/john-do59/predilection-api:${{ steps.version.outputs.tag }}
+          docker push ghcr.io/john-do59/predilection-api:latest
+
+      - name: Build — Image Ingest (Local Load)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile.ingest
-          push: true
+          load: true
           tags: |
             ghcr.io/john-do59/predilection-ingest:${{ steps.version.outputs.tag }}
             ghcr.io/john-do59/predilection-ingest:latest
 
-      - name: Build & Push — Image Django
+      - name: Scan Image Ingest avec Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ghcr.io/john-do59/predilection-ingest:${{ steps.version.outputs.tag }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'
+
+      - name: Push — Image Ingest
+        run: |
+          docker push ghcr.io/john-do59/predilection-ingest:${{ steps.version.outputs.tag }}
+          docker push ghcr.io/john-do59/predilection-ingest:latest
+
+      - name: Build — Image Django (Local Load)
         uses: docker/build-push-action@v6
         with:
           context: ./django_political_app
-          push: true
+          load: true
           tags: |
             ghcr.io/john-do59/predilection-django:${{ steps.version.outputs.tag }}
             ghcr.io/john-do59/predilection-django:latest
+
+      - name: Scan Image Django avec Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ghcr.io/john-do59/predilection-django:${{ steps.version.outputs.tag }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'
+
+      - name: Push — Image Django
+        run: |
+          docker push ghcr.io/john-do59/predilection-django:${{ steps.version.outputs.tag }}
+          docker push ghcr.io/john-do59/predilection-django:latest
 
   # JOB 3 : Déploiement SSH sur le VPS (Environnements Isolés)
 
