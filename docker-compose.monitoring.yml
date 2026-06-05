@@ -66,6 +66,23 @@ services:
     networks:
       - predilection-net
 
+  uptime-kuma:
+    image: louislam/uptime-kuma:1.23.13-alpine # Version alpine légère
+    container_name: monitoring-uptime-kuma
+    restart: unless-stopped
+    volumes:
+      - uptime_kuma_data:/app/data
+    networks:
+      - predilection-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kuma.rule=Host(`kuma.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.kuma.entrypoints=websecure"
+      - "traefik.http.routers.kuma.tls.certresolver=letsencrypt"
+      - "traefik.http.services.kuma.loadbalancer.server.port=3001"
+      # Uptime Kuma a son propre système d'authentification intégré,
+      # mais on peut forcer le BasicAuth si besoin (on le garde natif par défaut pour l'interface Kuma)
+
 networks:
   predilection-net:
     external: true
@@ -73,3 +90,4 @@ networks:
 volumes:
   prometheus_data:
   grafana_data:
+  uptime_kuma_data:
