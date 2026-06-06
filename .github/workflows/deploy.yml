@@ -78,12 +78,12 @@ jobs:
       - name: Scan Image FastAPI avec Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ghcr.io/john-do59/predilection-api:${{ steps.version.outputs.tag }}'
-          format: 'table'
-          exit-code: '1' # Bloque le pipeline en cas de criticité
+          image-ref: "ghcr.io/john-do59/predilection-api:${{ steps.version.outputs.tag }}"
+          format: "table"
+          exit-code: "1" # Bloque le pipeline en cas de criticité
           ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL'
+          vuln-type: "os,library"
+          severity: "CRITICAL"
 
       - name: Push — Image FastAPI
         run: |
@@ -103,12 +103,12 @@ jobs:
       - name: Scan Image Ingest avec Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ghcr.io/john-do59/predilection-ingest:${{ steps.version.outputs.tag }}'
-          format: 'table'
-          exit-code: '1'
+          image-ref: "ghcr.io/john-do59/predilection-ingest:${{ steps.version.outputs.tag }}"
+          format: "table"
+          exit-code: "1"
           ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL'
+          vuln-type: "os,library"
+          severity: "CRITICAL"
 
       - name: Push — Image Ingest
         run: |
@@ -127,12 +127,12 @@ jobs:
       - name: Scan Image Django avec Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ghcr.io/john-do59/predilection-django:${{ steps.version.outputs.tag }}'
-          format: 'table'
-          exit-code: '1'
+          image-ref: "ghcr.io/john-do59/predilection-django:${{ steps.version.outputs.tag }}"
+          format: "table"
+          exit-code: "1"
           ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL'
+          vuln-type: "os,library"
+          severity: "CRITICAL"
 
       - name: Push — Image Django
         run: |
@@ -201,16 +201,19 @@ jobs:
 
       - name: Vérification post-déploiement (smoke test HTTP)
         run: |
-          sleep 30
           echo "Test de disponibilité de l'application..."
-          HTTP_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://${{ secrets.DOMAIN_NAME }}/home/ || echo "000")
-          echo "HTTP Status: ${HTTP_CODE}"
-          if [[ "$HTTP_CODE" =~ ^(200|301|302)$ ]]; then
-            echo "✅ Application accessible."
-          else
-            echo "❌ ERREUR : L'application répond HTTP ${HTTP_CODE}."
-            exit 1
-          fi
+          # Boucle de retry (max 12 tentatives, toutes les 10 secondes = 2 minutes)
+          for i in {1..12}; do
+            HTTP_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://${{ secrets.DOMAIN_NAME || vars.DOMAIN_NAME }}/home/ || true)
+            echo "Tentative $i: HTTP Status = ${HTTP_CODE}"
+            if [[ "$HTTP_CODE" =~ ^(200|301|302)$ ]]; then
+              echo " Application accessible."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo " ERREUR : L'application n'a pas répondu correctement."
+          exit 1
 
       - name: Afficher les logs en cas d'erreur
         if: failure()

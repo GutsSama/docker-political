@@ -36,6 +36,8 @@ jobs:
 
       # 2. Les Tests Unitaires (Vérification de l'API)
       - name: Run FastAPI Tests
+        env:
+          DATABASE_URL: "sqlite:///./test.db"
         run: |
           cd api
           # On utilise pytest pour lancer les tests de l'API
