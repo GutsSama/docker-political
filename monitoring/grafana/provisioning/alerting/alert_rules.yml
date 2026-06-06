@@ -1,0 +1,246 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Infrastructure Alerts
+    folder: Alerting
+    interval: 1m
+    rules:
+
+      # ────────────────────────────────────────────
+      # CPU > 80% pendant 5 minutes
+      # ────────────────────────────────────────────
+      - uid: cpu-high-usage
+        title: "🔴 CPU Usage > 80%"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: >
+                100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+              instant: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 80
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: last
+                  type: query
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: critical
+          team: ops
+        annotations:
+          summary: "CPU élevé sur {{ $labels.instance }}"
+          description: "CPU à {{ $values.A.Value | printf \"%.1f\" }}% depuis plus de 5 minutes."
+          runbook_url: "https://github.com/John-Do59/docker-political-solo/blob/main/docs/RUNBOOK.md"
+
+      # ────────────────────────────────────────────
+      # RAM > 85% pendant 5 minutes
+      # ────────────────────────────────────────────
+      - uid: ram-high-usage
+        title: "🔴 RAM Usage > 85%"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: >
+                (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+              instant: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 85
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: last
+                  type: query
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: critical
+          team: ops
+        annotations:
+          summary: "Mémoire élevée sur {{ $labels.instance }}"
+          description: "RAM utilisée à {{ $values.A.Value | printf \"%.1f\" }}% depuis plus de 5 minutes."
+          runbook_url: "https://github.com/John-Do59/docker-political-solo/blob/main/docs/RUNBOOK.md"
+
+      # ────────────────────────────────────────────
+      # Disk usage > 80%
+      # ────────────────────────────────────────────
+      - uid: disk-high-usage
+        title: "🟠 Disk Usage > 80%"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: >
+                (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"})) * 100
+              instant: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 80
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: last
+                  type: query
+              refId: C
+              type: classic_conditions
+        noDataState: OK
+        execErrState: Error
+        for: 2m
+        labels:
+          severity: warning
+          team: ops
+        annotations:
+          summary: "Espace disque critique sur {{ $labels.instance }} ({{ $labels.mountpoint }})"
+          description: "Disque à {{ $values.A.Value | printf \"%.1f\" }}% de capacité."
+          runbook_url: "https://github.com/John-Do59/docker-political-solo/blob/main/docs/RUNBOOK.md"
+
+      # ────────────────────────────────────────────
+      # API downtime (FastAPI unreachable)
+      # ────────────────────────────────────────────
+      - uid: api-downtime
+        title: "🔴 API Downtime"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: up{job="fastapi"}
+              instant: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: last
+                  type: query
+              refId: C
+              type: classic_conditions
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 1m
+        labels:
+          severity: critical
+          team: ops
+        annotations:
+          summary: "API FastAPI inaccessible"
+          description: "Le service FastAPI ne répond plus à Prometheus depuis plus d'1 minute."
+          runbook_url: "https://github.com/John-Do59/docker-political-solo/blob/main/docs/INCIDENT_RESPONSE.md"
+
+      # ────────────────────────────────────────────
+      # DB unreachable (PostgreSQL)
+      # ────────────────────────────────────────────
+      - uid: db-unreachable
+        title: "🔴 PostgreSQL Unreachable"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: up{job="postgres"}
+              instant: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - A
+                  reducer:
+                    type: last
+                  type: query
+              refId: C
+              type: classic_conditions
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 1m
+        labels:
+          severity: critical
+          team: ops
+        annotations:
+          summary: "PostgreSQL inaccessible"
+          description: "La base de données PostgreSQL ne répond plus depuis plus d'1 minute."
+          runbook_url: "https://github.com/John-Do59/docker-political-solo/blob/main/docs/INCIDENT_RESPONSE.md"
