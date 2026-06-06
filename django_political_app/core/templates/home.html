@@ -1,25 +1,56 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-<section class="section">
-    <div class="container has-text-centered">
+<style>
+    .hero-bg {
+        background: url('{% static "images/background-home.jpg" %}') no-repeat center center;
+        background-size: cover;
+        position: relative;
+    }
+    .hero-bg::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(10, 15, 40, 0.6); /* Dark overlay to make text readable */
+        z-index: 1;
+    }
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    .hero-content .title, .hero-content .subtitle {
+        color: white !important;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .demo-container {
+        box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+        border-radius: 20px;
+        transition: transform 0.3s ease;
+    }
+    .demo-container:hover {
+        transform: translateY(-5px);
+    }
+</style>
+
+<section class="section hero-bg" style="min-height: 85vh; display: flex; flex-direction: column; justify-content: center;">
+    <div class="container has-text-centered hero-content">
         <h1 class="title is-1 has-text-weight-bold">
             Explorez les données départementales
         </h1>
-        <p class="subtitle is-4">
-            Visualisez et analysez les résultats des élections locales.
+        <p class="subtitle is-4 mt-4">
+            Visualisez et analysez les résultats des élections locales grâce à l'Intelligence Artificielle.
         </p>
 
-        <!-- 🚀 DEMO CI/CD — Ce bandeau prouve que la pipeline a bien déployé cette version -->
-        <div class="notification is-success is-light mt-4" style="border-radius: 12px; display: inline-block; padding: 0.75rem 1.5rem;">
-            <span class="icon"><i class="fas fa-rocket"></i></span>
-            <strong>🚀 Version déployée automatiquement via GitHub Actions &amp; CI/CD</strong>
+        <!-- 🚀 DEMO CI/CD -->
+        <div class="notification mt-5" style="border-radius: 12px; display: inline-block; padding: 0.75rem 1.5rem; background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);">
+            <span class="icon has-text-info-light"><i class="fas fa-rocket"></i></span>
+            <strong class="has-text-white">🚀 Version déployée automatiquement via GitHub Actions &amp; CI/CD</strong>
         </div>
 
         <div class="columns is-centered mt-6">
             <div class="column is-10">
-                <figure class="image">
-                    <img src="{% static 'images/demo.gif' %}" alt="Aperçu plateforme" style="border-radius: 20px;">
+                <figure class="image demo-container">
+                    <img src="{% static 'images/demo.gif' %}" alt="Aperçu plateforme" style="border-radius: 20px; border: 2px solid rgba(255,255,255,0.1);">
                 </figure>
             </div>
         </div>
