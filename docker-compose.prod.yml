@@ -111,8 +111,6 @@ services:
     image: ghcr.io/john-do59/predilection-django:${RELEASE_TAG:-latest}
     container_name: django-container
     restart: unless-stopped
-    volumes:
-      - static_volume:/app/staticfiles
     environment:
       PYTHONUNBUFFERED: "1"
       POSTGRES_HOST: db
@@ -145,7 +143,6 @@ services:
       - "traefik.http.routers.static.tls.certresolver=letsencrypt"
 
 volumes:
-  static_volume:
   db_data:
   letsencrypt_data:
   traefik_logs:
