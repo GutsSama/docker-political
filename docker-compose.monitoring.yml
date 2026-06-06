@@ -39,9 +39,23 @@ services:
     restart: unless-stopped
     volumes:
       - grafana_data:/var/lib/grafana
+      # Provisioning alerting (alert rules, contact points, notification policies)
+      - ./monitoring/grafana/provisioning/alerting:/etc/grafana/provisioning/alerting:ro
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${POSTGRES_PASSWORD:-admin} # Mot de passe par défaut
       - GF_USERS_ALLOW_SIGN_UP=false
+      # Unified alerting (activé par défaut depuis Grafana 9+)
+      - GF_ALERTING_ENABLED=false
+      - GF_UNIFIED_ALERTING_ENABLED=true
+      # SMTP pour les alertes email
+      - GF_SMTP_ENABLED=${GF_SMTP_ENABLED:-false}
+      - GF_SMTP_HOST=${GF_SMTP_HOST:-smtp.gmail.com:587}
+      - GF_SMTP_USER=${GF_SMTP_USER:-}
+      - GF_SMTP_PASSWORD=${GF_SMTP_PASSWORD:-}
+      - GF_SMTP_FROM_ADDRESS=${GF_SMTP_FROM_ADDRESS:-grafana@localhost}
+      # Discord webhook injecté dans les contact points via variable d'env
+      - GRAFANA_DISCORD_WEBHOOK_URL=${GRAFANA_DISCORD_WEBHOOK_URL:-}
+      - GRAFANA_ALERT_EMAIL=${GRAFANA_ALERT_EMAIL:-}
     networks:
       - predilection-net
     labels:

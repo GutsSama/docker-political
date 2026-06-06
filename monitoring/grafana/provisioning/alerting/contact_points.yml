@@ -1,0 +1,39 @@
+apiVersion: 1
+
+contactPoints:
+  # ────────────────────────────────────────────
+  # Discord — Webhook
+  # Remplacer DISCORD_WEBHOOK_URL par le vrai webhook dans les secrets
+  # ────────────────────────────────────────────
+  - orgId: 1
+    name: Discord Alerting
+    receivers:
+      - uid: discord-receiver
+        type: discord
+        settings:
+          url: "${GRAFANA_DISCORD_WEBHOOK_URL}"
+          message: |
+            🚨 **[{{ .Status | toUpper }}]** {{ .CommonLabels.alertname }}
+            **Sévérité :** {{ .CommonLabels.severity }}
+            **Résumé :** {{ .CommonAnnotations.summary }}
+            **Détail :** {{ .CommonAnnotations.description }}
+            **Runbook :** {{ .CommonAnnotations.runbook_url }}
+        disableResolveMessage: false
+
+  # ────────────────────────────────────────────
+  # Email SMTP
+  # Variables configurées dans grafana.ini ou env
+  # ────────────────────────────────────────────
+  - orgId: 1
+    name: Email Alerting
+    receivers:
+      - uid: email-receiver
+        type: email
+        settings:
+          addresses: "${GRAFANA_ALERT_EMAIL}"
+          singleEmail: false
+          message: |
+            Alerte : {{ .CommonLabels.alertname }}
+            Sévérité : {{ .CommonLabels.severity }}
+            {{ .CommonAnnotations.description }}
+        disableResolveMessage: false
