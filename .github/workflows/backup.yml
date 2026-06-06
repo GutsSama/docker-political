@@ -1,0 +1,81 @@
+name: "🗄️ Backup PostgreSQL — Quotidien"
+
+on:
+  # Cron : tous les jours à 02h00 UTC
+  schedule:
+    - cron: "0 2 * * *"
+  # Déclenchement manuel depuis GitHub Actions
+  workflow_dispatch:
+    inputs:
+      verify_only:
+        description: "Vérifier uniquement le dernier backup (sans créer un nouveau)"
+        required: false
+        default: "false"
+        type: boolean
+
+jobs:
+  backup:
+    name: "Backup PostgreSQL"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Vérifier la syntaxe du script backup
+        run: bash -n scripts/backup.sh
+
+      - name: Exécuter le backup sur le VPS via SSH
+        if: ${{ github.event.inputs.verify_only != 'true' }}
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 1455
+          envs: POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,BACKUP_DIR,BACKUP_RETENTION
+          script: |
+            set -euo pipefail
+            cd /home/${{ secrets.VPS_USER }}/docker-political
+
+            echo " Démarrage du backup PostgreSQL..."
+            bash scripts/backup.sh
+
+            echo " Vérification du backup..."
+            bash scripts/verify_backup.sh
+
+            echo " Backup et vérification terminés."
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          BACKUP_DIR: /var/backups/predilection
+          BACKUP_RETENTION: 7
+
+      - name: Vérifier uniquement le dernier backup
+        if: ${{ github.event.inputs.verify_only == 'true' }}
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 1455
+          script: |
+            cd /home/${{ secrets.VPS_USER }}/docker-political
+            bash scripts/verify_backup.sh
+        env:
+          BACKUP_DIR: /var/backups/predilection
+
+      - name: Lister les backups disponibles
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 1455
+          script: |
+            echo " Backups disponibles :"
+            ls -lh /var/backups/predilection/backup_*.sql.gz 2>/dev/null || echo "Aucun backup trouvé."
+            echo ""
+            echo " Espace disque :"
+            df -h /var/backups/predilection 2>/dev/null || df -h /var/backups
