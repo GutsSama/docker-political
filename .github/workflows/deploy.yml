@@ -195,7 +195,7 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DEBUG: ${{ secrets.DEBUG }}
-          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME || vars.DOMAIN_NAME }}
           TRAEFIK_DASHBOARD_CREDENTIALS: ${{ secrets.TRAEFIK_DASHBOARD_CREDENTIALS }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
