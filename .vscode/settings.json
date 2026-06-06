@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
         "./api/src"
-    ]
+    ],
+    "banditStealth.ollamaModel": "qwen3.5:4b"
 }
