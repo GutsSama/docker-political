@@ -49,14 +49,27 @@ Predil'ection est une **Application web** conçue pour prédire les résultats d
 - **Tests :** Pytest avec couverture de code
 - **Documentation :** Swagger UI et ReDoc et commentaires détaillés dans le code
 
-### Infrastructure & Déploiement (Production)
-L'application est déployée sur un VPS (Virtual Private Server) avec une architecture sécurisée et isolée :
-- 🔒 **[Pare-feu (UFW)](docs/firewall.md)** : Ports d'accès restreints.
-- 🛡️ **[Fail2Ban](docs/fail2ban.md)** : Protection contre le bruteforce SSH via journal systemd.
-- 🐳 **[Docker](docs/docker.md)** : Isolation complète des services dans un réseau interne.
-- 🚦 **[Traefik](docs/traefik.md)** : Reverse Proxy, terminaison TLS et certificats SSL (Let's Encrypt).
+### Infrastructure, Observabilité & DevSecOps (Production)
 
-**CI/CD (Déploiement Continu) :** Le projet utilise un pipeline GitHub Actions avec les **GitHub Environments**. Le déploiement s'adapte automatiquement à la branche ou au tag poussé, isolant ainsi les déploiements de chaque développeur (`dev`, `staging`, `prod`) sur son propre VPS cible.
+L'application est déployée sur un VPS (Virtual Private Server) avec une architecture sécurisée, isolée et hautement supervisée :
+
+**Sécurité & Infrastructure de base :**
+- 🔒 **[Pare-feu (UFW)](docs/firewall.md)** et 🛡️ **[Fail2Ban](docs/fail2ban.md)** : Protection contre le bruteforce SSH via journal systemd.
+- 🐳 **[Docker](docs/docker.md)** & 🚦 **[Traefik](docs/traefik.md)** : Isolation complète, Reverse Proxy, et certificats SSL (Let's Encrypt).
+
+**DevSecOps & CI/CD :** 
+Le projet utilise un pipeline GitHub Actions automatisé intégrant des contrôles de sécurité stricts :
+- 🕵️ **Gitleaks** : Détection de secrets et clés API.
+- 🛡️ **CodeQL** : Analyse statique de sécurité (SAST) du code.
+- 📦 **Trivy** : Scan de vulnérabilités des images Docker avant la mise en production.
+
+**Observabilité & Supervision :**
+- 📈 **Prometheus & Grafana** : Monitoring des ressources du VPS (via **Node Exporter**) et des conteneurs (via **cAdvisor**).
+- 📋 **Loki & Promtail** : Centralisation et indexation de tous les logs sans avoir à se connecter en SSH.
+- 🚨 **Uptime Kuma** : Supervision de la disponibilité des services et APIs en temps réel.
+
+👉 **[Consulter le détail de l'implémentation Observabilité & DevSecOps](docs/IMPLEMENTATION_OBSERVABILITE_SECOPS.md)**
+👉 **[Consulter le plan de montée en charge (Alerting & Résilience)](docs/PLAN_ALERTING_RESILIENCE.md)**
 👉 **[Lire le détail de la stratégie de déploiement en équipe (Multi-VPS)](docs/multi_vps_deployment.md)**
 
 ### Structure du projet
@@ -92,6 +105,10 @@ L'application est déployée sur un VPS (Virtual Private Server) avec une archit
 ├── eda
 ├── maquette
 ├── ml
+├── monitoring
+│   ├── loki
+│   ├── prometheus
+│   └── promtail
 ├── requirements.txt
 └── README.md
 ```
@@ -217,4 +234,4 @@ Ce projet est fourni à des fins éducatives.
 
 ---
 
-**Dernière mise à jour :** 10 avril 2026
+**Dernière mise à jour :** Juin 2026
