@@ -1,3 +1,5 @@
+![Présentation Predil'ection](django_political_app/static/images/France-ml.png)
+
 ![Démo](django_political_app/static/images/demo.gif)
 
 # Political Prediction
